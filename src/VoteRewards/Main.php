@@ -27,8 +27,7 @@ class Main extends PluginBase implements Listener {
         $this->currentVersion = $this->getDescription()->getVersion();
 
         $this->getServer()->getPluginManager()->registerEvents($this, $this);
-        $this->getServer()->getCommandMap()->register("vote", new VoteCommand($this));
-        $this->getServer()->getScheduler()->scheduleRepeatingTask(new UpdateCheckTask($this), 20 * 60 * 60); // Check for updates every hour
+        $this->getScheduler()->scheduleRepeatingTask(new UpdateCheckTask($this), 20 * 60 * 60); // Check for updates every hour
     }
 
     public function onPlayerJoin(PlayerJoinEvent $event): void {

@@ -7,7 +7,6 @@ use pocketmine\event\Listener;
 use pocketmine\event\player\PlayerJoinEvent;
 use pocketmine\command\Command;
 use pocketmine\command\CommandSender;
-use pocketmine\command\defaults\ConsoleCommandSender;
 use pocketmine\utils\Config;
 use pocketmine\Server;
 use pocketmine\utils\Internet;
@@ -51,7 +50,7 @@ class Main extends PluginBase implements Listener {
         if ($player !== null && $player->isOnline()) {
             $rewards = $this->config->get("rewards", []);
             foreach ($rewards as $reward) {
-                $this->getServer()->dispatchCommand(new ConsoleCommandSender(), str_replace("{player}", $playerName, $reward));
+                $this->getServer()->dispatchCommand($player, str_replace("{player}", $playerName, $reward));
             }
             $player->sendMessage("Thank you for voting! You have received your rewards.");
         }

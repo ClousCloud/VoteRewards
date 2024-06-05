@@ -8,11 +8,12 @@ use pocketmine\player\Player;
 
 class VoteCommand extends Command {
 
+    /** @var Main */
     private $plugin;
 
     public function __construct(Main $plugin) {
         parent::__construct("vote", "Displays the voting link", null, ["voting"]);
-        $this->plugin = $plugin;
+        $this->plugin = $plugin; // Menyimpan instance dari plugin ke dalam properti $plugin
     }
 
     public function execute(CommandSender $sender, string $commandLabel, array $args): bool {

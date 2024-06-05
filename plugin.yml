@@ -1,0 +1,9 @@
+name: VoteRewards
+main: VoteRewards\Main
+version: 1.0.0
+api: [5.0.0]
+author: XPocketMC
+commands:
+  vote:
+    description: Displays the voting link
+    usage: "/vote"

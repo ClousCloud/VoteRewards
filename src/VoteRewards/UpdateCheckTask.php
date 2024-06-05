@@ -5,6 +5,7 @@ namespace VoteRewards;
 use pocketmine\scheduler\Task;
 use pocketmine\utils\Internet;
 
+
 class UpdateCheckTask extends Task {
 
     private $plugin;
@@ -25,3 +26,4 @@ class UpdateCheckTask extends Task {
         }
     }
 }
+// Plugin End Code

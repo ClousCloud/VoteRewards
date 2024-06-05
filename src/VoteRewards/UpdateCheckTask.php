@@ -5,7 +5,6 @@ namespace VoteRewards;
 use pocketmine\scheduler\Task;
 use pocketmine\utils\Internet;
 
-
 class UpdateCheckTask extends Task {
 
     private $plugin;
@@ -14,7 +13,7 @@ class UpdateCheckTask extends Task {
         $this->plugin = $plugin;
     }
 
-    public function onRun(int $currentTick): void {
+    public function onRun(int $currentTick = -1): void {
         $url = "https://poggit.pmmp.io/releases.json?name=VoteRewards";
         $result = Internet::getURL($url);
         $data = json_decode($result, true);
@@ -26,4 +25,3 @@ class UpdateCheckTask extends Task {
         }
     }
 }
-// Plugin End Code

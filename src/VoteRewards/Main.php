@@ -1,0 +1,111 @@
+<?php
+
+namespace VoteRewards;
+
+use pocketmine\plugin\PluginBase;
+use pocketmine\event\Listener;
+use pocketmine\event\player\PlayerJoinEvent;
+use pocketmine\command\Command;
+use pocketmine\command\CommandSender;
+use pocketmine\command\ConsoleCommandSender;
+use pocketmine\utils\Config;
+use pocketmine\Server;
+use pocketmine\utils\Internet;
+use pocketmine\player\Player;
+use pocketmine\scheduler\Task;
+
+class Main extends PluginBase implements Listener {
+
+    private $apiKey;
+    private $config;
+    private $currentVersion;
+    private $latestVersion;
+
+    public function onEnable(): void {
+        $this->saveDefaultConfig();
+        $this->config = new Config($this->getDataFolder() . "config.yml", Config::YAML);
+        $this->apiKey = $this->config->get("api-key");
+        $this->currentVersion = $this->getDescription()->getVersion();
+
+        $this->getServer()->getPluginManager()->registerEvents($this, $this);
+        $this->getServer()->getCommandMap()->register("vote", new VoteCommand($this));
+        $this->getServer()->getScheduler()->scheduleRepeatingTask(new UpdateCheckTask($this), 20 * 60 * 60); // Check for updates every hour
+    }
+
+    public function onPlayerJoin(PlayerJoinEvent $event): void {
+        $player = $event->getPlayer();
+        $this->checkVote($player->getName());
+    }
+
+    public function checkVote(string $playerName): void {
+        $url = "https://minecraftpocket-servers.com/api-vote/?object=votes&element=claim&key=" . $this->apiKey . "&username=" . $playerName;
+        $result = Internet::getURL($url);
+        $data = json_decode($result, true);
+        if (isset($data["voted"]) && $data["voted"] === true) {
+            $this->rewardPlayer($playerName);
+        }
+    }
+
+    public function rewardPlayer(string $playerName): void {
+        $player = $this->getServer()->getPlayerExact($playerName);
+        if ($player !== null && $player->isOnline()) {
+            $rewards = $this->config->get("rewards", []);
+            foreach ($rewards as $reward) {
+                $this->getServer()->dispatchCommand(new ConsoleCommandSender(), str_replace("{player}", $playerName, $reward));
+            }
+            $player->sendMessage("Thank you for voting! You have received your rewards.");
+        }
+    }
+
+    public function getCurrentVersion(): string {
+        return $this->currentVersion;
+    }
+
+    public function getLatestVersion(): string {
+        return $this->latestVersion;
+    }
+
+    public function setLatestVersion(string $version): void {
+        $this->latestVersion = $version;
+    }
+}
+
+class VoteCommand extends Command {
+
+    private $plugin;
+
+    public function __construct(Main $plugin) {
+        parent::__construct("vote", "Displays the voting link", null, ["voting"]);
+        $this->plugin = $plugin;
+    }
+
+    public function execute(CommandSender $sender, string $commandLabel, array $args): bool {
+        if ($sender instanceof Player) {
+            $sender->sendMessage("Vote for our server at: https://minecraftpocket-servers.com/");
+        } else {
+            $sender->sendMessage("This command can only be used in-game.");
+        }
+        return true;
+    }
+}
+
+class UpdateCheckTask extends Task {
+
+    private $plugin;
+
+    public function __construct(Main $plugin) {
+        $this->plugin = $plugin;
+    }
+
+    public function onRun(int $currentTick): void {
+        $url = "https://poggit.pmmp.io/releases.json?name=VoteRewards";
+        $result = Internet::getURL($url);
+        $data = json_decode($result, true);
+        if (isset($data[0])) {
+            $this->plugin->setLatestVersion($data[0]["version"]);
+            if (version_compare($this->plugin->getCurrentVersion(), $this->plugin->getLatestVersion(), '<')) {
+                $this->plugin->getLogger()->info("A new version of VoteRewards is available: " . $this->plugin->getLatestVersion() . ". Download it from https://poggit.pmmp.io/p/VoteRewards");
+            }
+        }
+    }
+}
